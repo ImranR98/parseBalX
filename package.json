@@ -9,7 +9,7 @@
     "dev": "nodemon index.js",
     "start": "node index.js"
   },
-  "name": "balancexlsxanalysis",
+  "name": "parsebalx",
   "version": "1.0.0",
   "main": "lib.js",
   "author": "",

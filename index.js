@@ -4,7 +4,7 @@ const path = require('path')
 const fs = require('fs')
 const lib = require('./lib')
 
-const balanceXLSX = process.env['BALANCE_PATH']
+const balanceXLSX = process.env['BALANCE_PATH'] || path.resolve(`${__dirname}/../Balance.xlsx`)
 const PORT = 3000
 
 const app = express()
