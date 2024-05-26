@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "express": "^4.19.2",
+    "xlsx": "^0.18.5"
+  },
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js"
+  },
+  "name": "balancexlsxanalysis",
+  "version": "1.0.0",
+  "main": "lib.js",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.1.1"
+  }
+}

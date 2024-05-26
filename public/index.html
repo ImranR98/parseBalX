@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Balance.XLSX Analysis</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.1.1/chartjs-plugin-zoom.min.js"></script>
+</head>
+
+<body>
+  <section class="section">
+    <div class="container">
+
+      <h1 class="title">Balance.XLSX Analysis</h1>
+
+      <div class="columns">
+        <div class="column">
+
+          <div class="columns">
+            <div class="column">
+              <label for="categorySelect" class="label">Select categories:</label>
+              <select id="categorySelect" class="select is-fullwidth" style="min-height: 12em;" multiple>
+              </select>
+              <a class="button is-primary mt-4" onclick="fetchReport()">
+                Generate
+              </a>
+            </div>
+            <div class="column">
+              <label for="currencySelect" class="label">Select currencies:</label>
+              <select id="currencySelect" class="select is-fullwidth" style="min-height: 12em;" multiple>
+              </select>
+            </div>
+          </div>
+
+          <div id="chartsDiv" class="column"></div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+  <script>
+    const categorySelect = document.getElementById('categorySelect')
+    const currencySelect = document.getElementById('currencySelect')
+    const chartsDiv = document.getElementById('chartsDiv')
+
+    const renderReport = (jsonData) => {
+      // Function to dynamically infer currency types from JSON data
+      function inferCurrencies(data) {
+        const currencies = new Set();
+        data.forEach(entry => {
+          Object.keys(entry.summary).forEach(currency => currencies.add(currency));
+        });
+        return Array.from(currencies);
+      }
+
+      // Parse JSON data and prepare data for the chart
+      const labels = jsonData.map(entry => entry.month);
+      const currencies = inferCurrencies(jsonData);
+      chartsDiv.innerHTML = ''
+      currencies.forEach(currency => chartsDiv.innerHTML += `<div class="box"><canvas id="${currency}Chart" width="400" height="200"></canvas></div>`)
+      currencies.forEach(currency => {
+        const expenses = jsonData.map(entry => entry.summary[currency] ? entry.summary[currency].expenses : 0);
+        const earnings = jsonData.map(entry => entry.summary[currency] ? entry.summary[currency].earnings : 0);
+        const dataset = [
+          {
+            label: `${currency} Expenses`,
+            data: expenses,
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            borderColor: 'rgba(255, 99, 132, 1)',
+            borderWidth: 1
+          },
+          {
+            label: `${currency} Earnings`,
+            data: earnings,
+            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }
+        ];
+
+        new Chart(document.getElementById(`${currency}Chart`).getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: dataset
+          },
+          options: {
+            scales: {
+              y: {
+                beginAtZero: true
+              }
+            },
+            plugins: {
+              zoom: {
+                pan: {
+                  enabled: true,
+                  mode: 'x'
+                },
+                zoom: {
+                  wheel: {
+                    enabled: true
+                  },
+                  pinch: {
+                    enabled: true
+                  },
+                  mode: 'x'
+                }
+              }
+            }
+          }
+        });
+      });
+    }
+
+    const fetchReport = async () => {
+      const categories = Array.from(categorySelect.selectedOptions).map(s => s.value)
+      const currencies = Array.from(currencySelect.selectedOptions).map(s => s.value)
+      const response = await fetch('/generateReport', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ categories, currencies }),
+      })
+      if (!response.ok) {
+        alert(response.statusText)
+        return
+      } else {
+        renderReport(await response.json())
+      }
+    }
+
+    const fetchMetadata = async (date) => {
+      const response = await fetch('/metadata')
+      if (!response.ok) {
+        alert(response.statusText)
+        return
+      }
+      const { categories, currencies } = await response.json()
+      categorySelect.innerHTML = ''
+      categories.forEach(c => {
+        categorySelect.innerHTML += `<option value="${c}" ${c.startsWith('Investment') ? '' : 'selected'}>${c}</option>`
+      })
+      currencySelect.innerHTML = ''
+      currencies.forEach(c => {
+        currencySelect.innerHTML += `<option value="${c}" ${c.startsWith('Investment') ? '' : 'selected'}>${c}</option>`
+      })
+    }
+
+    fetchMetadata().then(fetchReport)
+  </script>
+</body>
+
+</html>
