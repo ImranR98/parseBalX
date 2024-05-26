@@ -12,6 +12,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 if (!balanceXLSX || !fs.existsSync(balanceXLSX)) {
+    console.log(balanceXLSX)
     throw 'BALANCE_PATH environment variable not defined!'
 }
 
